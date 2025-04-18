@@ -1,38 +1,48 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import os
 
-def mandelbrot(c, max_iter):
-    z = 0
-    n = 0
-    while abs(z) <= 2 and n < max_iter:
-        z = z*z + c
-        n += 1
-    return n
+def koch_snowflake(order, scale=10):
+    def koch_curve(p1, p2, order):
+        if order == 0:
+            return [p1, p2]
+        else:
+            p1 = np.array(p1)
+            p2 = np.array(p2)
+            delta = p2 - p1
+            p3 = p1 + delta / 3
+            p5 = p1 + delta * 2 / 3
+            angle = np.pi / 3
+            rotation = np.array([[np.cos(angle), -np.sin(angle)],
+                                 [np.sin(angle), np.cos(angle)]])
+            p4 = p3 + rotation.dot(p5 - p3)
+            return (koch_curve(p1, p3, order - 1) +
+                    koch_curve(p3, p4, order - 1)[1:] +
+                    koch_curve(p4, p5, order - 1)[1:] +
+                    koch_curve(p5, p2, order - 1)[1:])
 
-def generate_mandelbrot(width, height, x_min, x_max, y_min, y_max, max_iter):
-    x = np.linspace(x_min, x_max, width)
-    y = np.linspace(y_min, y_max, height)
-    image = np.empty((height, width))
-    
-    for i in range(height):
-        for j in range(width):
-            c = complex(x[j], y[i])
-            image[i, j] = mandelbrot(c, max_iter)
-    
-    return image
+    height = np.sqrt(3) / 2 * scale
+    p1 = [0, 0]
+    p2 = [scale, 0]
+    p3 = [scale / 2, height]
 
-# Settings
-width, height = 800, 800
-x_min, x_max = -2.0, 1.0
-y_min, y_max = -1.5, 1.5
-max_iter = 100
+    side1 = koch_curve(p1, p2, order)
+    side2 = koch_curve(p2, p3, order)
+    side3 = koch_curve(p3, p1, order)
 
-mandelbrot_image = generate_mandelbrot(width, height, x_min, x_max, y_min, y_max, max_iter)
+    return side1 + side2[1:] + side3[1:]
 
-plt.figure(figsize=(10, 10))
-plt.imshow(mandelbrot_image, extent=[x_min, x_max, y_min, y_max], cmap='twilight_shifted')
-plt.colorbar(label='Iteration count')
-plt.title("Mandelbrot Set")
-plt.xlabel("Re")
-plt.ylabel("Im")
-plt.show()
+def plot_koch(order, output_path):
+    points = koch_snowflake(order)
+    x, y = zip(*points)
+    plt.figure(figsize=(8, 8))
+    plt.plot(x, y)
+    plt.title(f'Koch Snowflake (Order {order})')
+    plt.axis('equal')
+    plt.axis('off')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    plt.savefig(output_path)
+    plt.close()
+
+# Save the output to a file
+plot_koch(order=4, output_path='output/fractal.png')
