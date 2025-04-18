@@ -45,4 +45,8 @@ def plot_koch(order, output_path):
     plt.close()
 
 # Save the output to a file
+print("Generating Koch snowflake...")
 plot_koch(order=4, output_path='output/fractal.png')
+print("✅ Fractal image saved to output/fractal.png")
+print("✅ Done.")
+
